@@ -1,6 +1,6 @@
 import sys, os
 from settings import *
-
+from state import SplashScreen
 
 class Game:
     def __init__(self):
@@ -10,11 +10,11 @@ class Game:
       pygame.display.set_caption(TITLE)
       self.font = pygame.font.Font(FONT, TITLESIZE)
       self.running = True
-      
-    def debugger(self, debug_list):
-        for idx, name in enumerate(debug_list):
-            self.render_text(name, COLORS['white'], self.font, (10, 15 * idx), False)
-          
+      # state machine
+      self.states = []
+      self.splash_screen = SplashScreen(self)
+      self.states.append(self.splash_screen)
+           
     def custom_cursor(self):
         pygame.mouse.set_visible(False)
         curs_image = pygame.image.load('./assets/images/crosshair182.png').convert_alpha()
@@ -45,7 +45,11 @@ class Game:
         for file_name in os.listdir(path):
             animation.update({file_name:[]})
         return animation
-             
+    
+    def reset_inputs(self):
+        for key in INPUTS:
+            INPUTS[key] = False
+    
     def get_inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -82,17 +86,14 @@ class Game:
       
     def loop(self):
         while self.running:
-            self.screen.fill(COLORS['black'])
             dt = self.clock.tick(FPS)/1000
             self.get_inputs()
             # state machine
             # update
-            
+            self.states[-1].update(dt)
             # draw
-            self.debugger([
-                str(f'FPS: {round(self.clock.get_fps(), 2)}'),
-            ])
-            
+            self.states[-1].draw(self.screen)
+           
             #
             # self.custom_cursor() 
             #
